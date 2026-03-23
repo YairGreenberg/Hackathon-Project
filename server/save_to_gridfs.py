@@ -36,7 +36,7 @@ def main():
         image_stream = BytesIO(response.content)
 
         # 2. התחברות ל-MongoDB ו-GridFS
-        client = pymongo.MongoClient("mongodb://localhost:27017/")
+        client = pymongo.MongoClient("mongodb+srv://k0556714698_db_user:oQNofFssMUDuYbfc@hackathon-project.5wkgvba.mongodb.net/?appName=Hackathon-Project")
         db = client["photo_album_db"]
         fs = gridfs.GridFS(db)
 
