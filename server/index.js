@@ -4,7 +4,7 @@ import axios from 'axios';
 import cors from 'cors';
 import TelegramBot from 'node-telegram-bot-api';
 import { uploadToDrive } from './services/googleDriveService.js';
-import photosRouter from './routes/photos.js';
+import { spawn } from 'child_process';
 import albumsRouter from './routes/albums.js';
 
 const app = express();
@@ -13,6 +13,43 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
+
+// פונקציה שמפעילה את סקריפט הפייתון ומעבירה לו נתונים
+function saveDirectlyToMongo(fileUrl, metaData) {
+    return new Promise((resolve, reject) => {
+        const dataToSend = {
+            fileUrl: fileUrl,
+            caption: metaData.caption || '',
+            sender: metaData.sender || 'unknown',
+            albumName: metaData.albumName || 'general'
+        };
+
+        const pythonProcess = spawn('python', ['save_to_gridfs.py', JSON.stringify(dataToSend)]);
+
+        let output = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            output += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            console.error(`Python Error: ${data}`);
+        });
+
+        pythonProcess.on('close', (code) => {
+            try {
+                const result = JSON.parse(output);
+                if (result.success) {
+                    resolve(result);
+                } else {
+                    reject(new Error(result.error));
+                }
+            } catch (e) {
+                reject(new Error("Failed to parse Python response"));
+            }
+        });
+    });
+}
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -50,12 +87,11 @@ bot.on('message', async (msg) => {
     const stream = await axios({ method: 'get', url: downloadUrl, responseType: 'stream' });
     const driveResult = await uploadToDrive(fileName, mimeType, stream.data);
 
-    await axios.post('http://localhost:3000/api/photos', {
-      fileUrl: downloadUrl,
+   // קריאה לפייתון במקום לשרת הפנימי
+    await saveDirectlyToMongo(downloadUrl, {
       driveFileId: driveResult.id,
       caption: msg.caption || '',
-      sender,
-      source: 'telegram',
+      sender: sender
     });
 
     console.log(`📸 נשמר מ-${sender}`);
@@ -70,7 +106,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/photos', photosRouter);
 app.use('/api/albums', albumsRouter);
 
 app.post('/webhook/whatsapp', (req, res) => {
