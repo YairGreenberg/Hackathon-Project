@@ -1,14 +1,16 @@
 import 'dotenv/config';
 import express from 'express';
 import axios from 'axios';
+import cors from 'cors';
 import TelegramBot from 'node-telegram-bot-api';
 import { uploadToDrive } from './services/googleDriveService.js';
+import photosRouter from './routes/photos.js';
+import albumsRouter from './routes/albums.js';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-const photos = [];
+app.use(cors());
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
@@ -48,18 +50,15 @@ bot.on('message', async (msg) => {
     const stream = await axios({ method: 'get', url: downloadUrl, responseType: 'stream' });
     const driveResult = await uploadToDrive(fileName, mimeType, stream.data);
 
-    const photo = {
-      id: Date.now().toString(),
+    await axios.post('http://localhost:3000/api/photos', {
       fileUrl: downloadUrl,
       driveFileId: driveResult.id,
       caption: msg.caption || '',
       sender,
       source: 'telegram',
-      createdAt: new Date().toISOString(),
-    };
-    photos.push(photo);
-    console.log(`📸 נשמר מ-${sender}`);
+    });
 
+    console.log(`📸 נשמר מ-${sender}`);
     bot.sendMessage(chatId, '✅ הועלה בהצלחה!');
   } catch (err) {
     console.error('❌ שגיאה:', err.message);
@@ -68,12 +67,11 @@ bot.on('message', async (msg) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', photos: photos.length });
+  res.json({ status: 'ok' });
 });
 
-app.get('/api/photos', (req, res) => {
-  res.json({ count: photos.length, photos });
-});
+app.use('/api/photos', photosRouter);
+app.use('/api/albums', albumsRouter);
 
 app.post('/webhook/whatsapp', (req, res) => {
   console.log('📩 WhatsApp:', JSON.stringify(req.body).slice(0, 120));
