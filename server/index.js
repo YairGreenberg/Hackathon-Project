@@ -1,86 +1,80 @@
 import 'dotenv/config';
 import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-// import { downloadFile } from './services/downloader.js';
+import axios from 'axios';
+import TelegramBot from 'node-telegram-bot-api';
+import { uploadToDrive } from './services/googleDriveService.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// אחסון זמני בזיכרון — עד שה-DB מוכן
 const photos = [];
 
-const UPLOADS = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS);
+const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', photos: photos.length });
-});
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  const sender = String(msg.from?.username || msg.from?.id);
 
-
-//token telegrm
-app.post('/webhook/telegram', (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.sendStatus(200);
+  if (msg.text === '/start') {
+    return bot.sendMessage(chatId, 'שלח לי תמונה ואעלה אותה לדרייב שלך!');
   }
 
-  const sender = message.from?.username || message.from?.id || 'unknown';
-  const caption = message.caption || message.text || '';
-  const hasPhoto = !!message.photo;
+  let fileId, fileName, mimeType;
 
-  console.log(`📩 הודעה מ-${sender} | תמונה: ${hasPhoto} | טקסט: "${caption}"`);
+  if (msg.photo?.length > 0) {
+    const photo = msg.photo[msg.photo.length - 1];
+    fileId = photo.file_id;
+    fileName = `photo_${Date.now()}.jpg`;
+    mimeType = 'image/jpeg';
+  } else if (msg.video) {
+    fileId = msg.video.file_id;
+    fileName = msg.video.file_name || `video_${Date.now()}.mp4`;
+    mimeType = msg.video.mime_type || 'video/mp4';
+  } else if (msg.document) {
+    fileId = msg.document.file_id;
+    fileName = msg.document.file_name || `file_${Date.now()}`;
+    mimeType = msg.document.mime_type || 'application/octet-stream';
+  }
 
-  if (hasPhoto) {
+  if (!fileId) return;
+
+  try {
+    bot.sendMessage(chatId, `מעלה את ${fileName} לדרייב...`);
+
+    const file = await bot.getFile(fileId);
+    const downloadUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
+
+    const stream = await axios({ method: 'get', url: downloadUrl, responseType: 'stream' });
+    const driveResult = await uploadToDrive(fileName, mimeType, stream.data);
+
     const photo = {
       id: Date.now().toString(),
-      fileUrl: '',
-      caption,
+      fileUrl: downloadUrl,
+      driveFileId: driveResult.id,
+      caption: msg.caption || '',
       sender,
       source: 'telegram',
       createdAt: new Date().toISOString(),
     };
     photos.push(photo);
     console.log(`📸 נשמר מ-${sender}`);
+
+    bot.sendMessage(chatId, '✅ הועלה בהצלחה!');
+  } catch (err) {
+    console.error('❌ שגיאה:', err.message);
+    bot.sendMessage(chatId, 'שגיאה בהעלאה.');
   }
-
-  res.sendStatus(200);
 });
-// קבלת תמונה — POST /api/photo
-// body: { fileUrl, caption, sender, source }
-app.post('/api/photo', (req, res) => {
-  const { fileUrl = '', caption = '', sender = 'unknown', source = 'telegram' } = req.body;
 
-  const photo = {
-    id: Date.now().toString(),
-    fileUrl,
-    caption,
-    sender,
-    source,
-    createdAt: new Date().toISOString(),
-  };
-
-  photos.push(photo);
-  console.log(`📸 נשמר מ-${sender}`);
-  res.json({ success: true, photo });
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', photos: photos.length });
 });
 
 app.get('/api/photos', (req, res) => {
   res.json({ count: photos.length, photos });
 });
 
-// Telegram webhook — מוכן לחיבור כשיהיה הקוד
-app.post('/webhook/telegram', (req, res) => {
-  console.log('📩 טלגרם:', JSON.stringify(req.body).slice(0, 120));
-  res.sendStatus(200);
-});
-
-// WhatsApp / Twilio webhook
 app.post('/webhook/whatsapp', (req, res) => {
   console.log('📩 WhatsApp:', JSON.stringify(req.body).slice(0, 120));
   res.set('Content-Type', 'text/xml');
@@ -90,7 +84,5 @@ app.post('/webhook/whatsapp', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 שרת פעיל: http://localhost:${PORT}`);
-  console.log(`⚠️  זיכרון זמני — ממתין ל-MongoDB URI`);
+  console.log(`🤖 בוט טלגרם פעיל`);
 });
-
-
