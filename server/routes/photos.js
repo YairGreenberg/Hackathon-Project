@@ -1,73 +1,88 @@
-import express from "express";
+import express from 'express';
+import { ObjectId } from 'mongodb';
+import dbMongo from '../data/coonected Mongo.js';
 
 const router = express.Router();
 
-// אחסון זמני — יוחלף ב-MongoDB
-const photos = [];
-
 // GET /api/photos — כל התמונות
-router.get("/", (req, res) => {
-  res.json({ count: photos.length, photos });
+router.get('/', async (req, res) => {
+  try {
+    const photos = await dbMongo.collection('photos').find().toArray();
+    res.json({ count: photos.length, photos });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשליפת תמונות' });
+  }
 });
 
 // GET /api/photos/:albumName — לפי אלבום
-router.get("/:albumName", (req, res) => {
-  const { albumName } = req.params;
-  const filtered = photos.filter((p) => p.albumName === albumName);
-  res.json({ count: filtered.length, photos: filtered });
+router.get('/:albumName', async (req, res) => {
+  try {
+    const { albumName } = req.params;
+    const photos = await dbMongo.collection('photos').find({ albumName }).toArray();
+    res.json({ count: photos.length, photos });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשליפת תמונות' });
+  }
 });
 
 // POST /api/photos — שמירת תמונה
-router.post("/", (req, res) => {
-  const {
-    fileUrl = "",
-    caption = "",
-    sender = "unknown",
-    source = "telegram",
-    albumName = "general",
-  } = req.body;
+router.post('/', async (req, res) => {
+  try {
+    const { fileUrl = '', caption = '', sender = 'unknown', source = 'telegram', albumName = 'general' } = req.body;
 
-  const photo = {
-    id: Date.now().toString(),
-    fileUrl,
-    caption,
-    sender,
-    source,
-    albumName,
-    createdAt: new Date().toISOString(),
-  };
+    const photo = {
+      fileUrl,
+      caption,
+      sender,
+      source,
+      albumName,
+      createdAt: new Date().toISOString(),
+    };
 
-  photos.push(photo);
-  console.log(`📸 נשמר מ-${sender} לאלבום ${albumName}`);
-  res.json({ success: true, photo });
+    const result = await dbMongo.collection('photos').insertOne(photo);
+    console.log(`📸 נשמר מ-${sender} לאלבום ${albumName}`);
+    res.json({ success: true, photo: { ...photo, id: result.insertedId } });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשמירת תמונה' });
+  }
 });
 
 // DELETE /api/photos/:id — מחיקת תמונה
-router.delete("/:id", (req, res) => {
-  const { id } = req.params;
-  const index = photos.findIndex((p) => p.id === id);
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await dbMongo.collection('photos').deleteOne({ _id: new ObjectId(id) });
 
-  if (index === -1) {
-    return res.status(404).json({ error: "תמונה לא נמצאה" });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'תמונה לא נמצאה' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה במחיקת תמונה' });
   }
-
-  photos.splice(index, 1);
-  res.json({ success: true });
 });
 
 // PATCH /api/photos/:id/album — שייך תמונה לאלבום
-router.patch("/:id/album", (req, res) => {
-  const { id } = req.params;
-  const { albumName } = req.body;
+router.patch('/:id/album', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { albumName } = req.body;
 
-  const photo = photos.find((p) => p.id === id);
+    const result = await dbMongo.collection('photos').findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: { albumName } },
+      { returnDocument: 'after' }
+    );
 
-  if (!photo) {
-    return res.status(404).json({ error: "תמונה לא נמצאה" });
+    if (!result) {
+      return res.status(404).json({ error: 'תמונה לא נמצאה' });
+    }
+
+    res.json({ success: true, photo: result });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בעדכון אלבום' });
   }
-
-  photo.albumName = albumName;
-  res.json({ success: true, photo });
 });
 
 export default router;
