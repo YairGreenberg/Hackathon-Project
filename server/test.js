@@ -17,7 +17,7 @@ async function run() {
   console.log('✅ health:', health);
 
   // שמירת תמונה עם כיתוב
-  const r1 = await post(`${BASE}/api/photo`, {
+  const r1 = await post(`${BASE}/api/photos`, {
     caption: 'תמונה מהחוף',
     sender: '+972501234567',
     source: 'telegram',
@@ -25,7 +25,7 @@ async function run() {
   console.log('✅ תמונה 1:', r1.photo.id, '|', r1.photo.caption);
 
   // שמירת תמונה בלי כיתוב
-  const r2 = await post(`${BASE}/api/photo`, {
+  const r2 = await post(`${BASE}/api/photos`, {
     sender: '+972501234567',
     source: 'whatsapp',
   });
@@ -46,7 +46,7 @@ const r3 = await fetch(`${BASE}/webhook/telegram`, {
 console.log('✅ webhook טלגרם:', r3.status);
 
   // שליפת כל התמונות
-  const all = await fetch(`${BASE}/api/photos`).then(r => r.json());
+  const all = await fetch(`${BASE}/api/photoss`).then(r => r.json());
   console.log(`\n📸 סה"כ: ${all.count}`);
   all.photos.forEach(p => {
     console.log(`  - ${p.source} | ${p.sender} | "${p.caption || 'ללא כיתוב'}"`);

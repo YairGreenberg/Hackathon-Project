@@ -3,7 +3,6 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import TelegramBot from 'node-telegram-bot-api';
-import { uploadToDrive } from './services/googleDriveService.js';
 import photosRouter from './routes/photos.js';
 import albumsRouter from './routes/albums.js';
 
@@ -42,17 +41,13 @@ bot.on('message', async (msg) => {
   if (!fileId) return;
 
   try {
-    bot.sendMessage(chatId, `מעלה את ${fileName} לדרייב...`);
-
     const file = await bot.getFile(fileId);
     const downloadUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
 
     const stream = await axios({ method: 'get', url: downloadUrl, responseType: 'stream' });
-    const driveResult = await uploadToDrive(fileName, mimeType, stream.data);
 
     await axios.post('http://localhost:3000/api/photos', {
       fileUrl: downloadUrl,
-      driveFileId: driveResult.id,
       caption: msg.caption || '',
       sender,
       source: 'telegram',
