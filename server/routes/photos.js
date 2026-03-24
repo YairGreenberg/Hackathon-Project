@@ -19,12 +19,13 @@ router.get('/:albumName', (req, res) => {
 
 // POST /api/photos — שמירת תמונה
 router.post('/', (req, res) => {
-  const { fileUrl = '', caption = '', sender = 'unknown', source = 'telegram', albumName = 'general', driveFileId = '' } = req.body;
+  const { fileUrl = '', caption = '', sender = 'unknown', source = 'telegram', albumName = 'general', driveFileId = '', tags = [] } = req.body; // tags — מערך תגיות שמגיע מ-Cloudinary
 
   const photo = {
     id: Date.now().toString(),
     fileUrl,
     driveFileId,
+    tags, // שומר את התגיות יחד עם שאר הנתונים של התמונה
     caption,
     sender,
     source,

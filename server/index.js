@@ -6,6 +6,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { uploadToDrive } from './services/googleDriveService.js';
 import photosRouter from './routes/photos.js';
 import albumsRouter from './routes/albums.js';
+import statsRouter from './routes/stats.js'; // מחבר את קובץ הסטטיסטיקות לשרת
 
 const app = express();
 app.use(express.json());
@@ -53,6 +54,7 @@ bot.on('message', async (msg) => {
     await axios.post('http://localhost:3000/api/photos', {
       fileUrl: downloadUrl,
       driveFileId: driveResult.id,
+      tags: [], // מערך תגיות שיתמלא אוטומטית ע"י ניתוח התמונה ב-Cloudinary
       caption: msg.caption || '',
       sender,
       source: 'telegram',
@@ -72,6 +74,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/photos', photosRouter);
 app.use('/api/albums', albumsRouter);
+app.use('/api/stats',  statsRouter); // מחזיר סטטיסטיקות על התמונות — מי שלח הכי הרבה, תגיות נפוצות וכו'
 
 app.post('/webhook/whatsapp', (req, res) => {
   console.log('📩 WhatsApp:', JSON.stringify(req.body).slice(0, 120));
