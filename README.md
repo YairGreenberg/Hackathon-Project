@@ -17,6 +17,7 @@ MONGO_URI=mongodb://mongo:27017/Albums
 
 # אם אתם מריצים עם Node.js (על המחשב):
 # MONGO_URI=mongodb://localhost:27017/Albums
+# MONGO_TLS=false
 ````
 
 ---

@@ -7,6 +7,9 @@ services:
       - server/.env
     depends_on:
       - mongo
+    environment:
+      - MONGO_TLS=false
+      - MONGO_URI=mongodb://mongo:27017/Albums
     restart: unless-stopped
 
   mongo:
