@@ -54,12 +54,12 @@ bot.on("message", async (msg) => {
     });
 
     // 2. העלאה ל-Cloudinary וקבלת ה-URL הקבוע
-    const cloudinaryResult = await uploadToCloudinary(stream.data);
+    const cloudinaryUrl = await uploadToCloudinary(stream.data);
 
-    // 3. שליחת הנתונים ל-API שלנו
+    // 3. שליחת הנתונים ל-API שלנו (שימוש ב-cloudinaryUrl במקום downloadUrl)
     await axios.post("http://localhost:3000/api/photos", {
-      fileUrl: cloudinaryResult.secure_url,
-      tags: cloudinaryResult.tags || [], // מערך תגיות שיתמלא אוטומטית ע"י ניתוח התמונה ב-Cloudinary
+      fileUrl: cloudinaryUrl,
+      tags: [], // מערך תגיות שיתמלא אוטומטית ע"י ניתוח התמונה ב-Cloudinary
       caption: msg.caption || "",
       sender,
       source: "telegram",
