@@ -1,6 +1,7 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import dbMongo from '../data/coonected Mongo.js';
+import { deleteFromCloudinary } from '../services/cloudinaryService.js';
 
 const router = express.Router();
 
@@ -51,15 +52,31 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await dbMongo.collection('photos').deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
+    
+    // 1. נמצא את התמונה במונגו כדי לקבל את ה-URL שלה
+    const photo = await dbMongo.collection('photos').findOne({ _id: new ObjectId(id) });
+    
+    if (!photo) {
       return res.status(404).json({ error: 'תמונה לא נמצאה' });
     }
 
-    res.json({ success: true });
+    // 2. חילוץ ה-Public ID מה-URL של Cloudinary
+    // הלינק נראה ככה: .../v12345/folder/filename.jpg
+    const parts = photo.fileUrl.split('/');
+    const fileNameWithExtension = parts.pop(); // filename.jpg
+    const folder = parts.pop(); // folder (telegram_bot)
+    const publicId = `${folder}/${fileNameWithExtension.split('.')[0]}`; // telegram_bot/filename
+
+    // 3. מחיקה מ-Cloudinary
+    await deleteFromCloudinary(publicId);
+
+    // 4. מחיקה מ-MongoDB
+    await dbMongo.collection('photos').deleteOne({ _id: new ObjectId(id) });
+
+    res.json({ success: true, message: 'התמונה נמחקה מהענן וממסד הנתונים' });
   } catch (err) {
-    res.status(500).json({ error: 'שגיאה במחיקת תמונה' });
+    console.error(err);
+    res.status(500).json({ error: 'שגיאה בתהליך המחיקה' });
   }
 });
 
