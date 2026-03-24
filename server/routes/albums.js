@@ -1,33 +1,56 @@
 import express from 'express';
+import { ObjectId } from 'mongodb';
+import dbMongo from '../data/coonected Mongo.js';
 
 const router = express.Router();
 
-// אחסון זמני — יוחלף ב-MongoDB
-const albums = [];
-
 // GET /api/albums — כל האלבומים
-router.get('/', (req, res) => {
-  res.json({ count: albums.length, albums });
+router.get('/', async (req, res) => {
+  try {
+    const albums = await dbMongo.collection('albums').find().toArray();
+    res.json({ count: albums.length, albums });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשליפת אלבומים' });
+  }
 });
 
 // POST /api/albums — צור אלבום חדש
-router.post('/', (req, res) => {
-  const { name, description = '' } = req.body;
+router.post('/', async (req, res) => {
+  try {
+    const { name, description = '' } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ error: 'חסר שם אלבום' });
+    if (!name) {
+      return res.status(400).json({ error: 'חסר שם אלבום' });
+    }
+
+    const album = {
+      name,
+      description,
+      createdAt: new Date().toISOString(),
+    };
+
+    const result = await dbMongo.collection('albums').insertOne(album);
+    console.log(`📁 אלבום נוצר: ${name}`);
+    res.json({ success: true, album: { ...album, id: result.insertedId } });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה ביצירת אלבום' });
   }
+});
 
-  const album = {
-    id: Date.now().toString(),
-    name,
-    description,
-    createdAt: new Date().toISOString(),
-  };
+// DELETE /api/albums/:id — מחיקת אלבום
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await dbMongo.collection('albums').deleteOne({ _id: new ObjectId(id) });
 
-  albums.push(album);
-  console.log(`📁 אלבום נוצר: ${name}`);
-  res.json({ success: true, album });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'אלבום לא נמצא' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה במחיקת אלבום' });
+  }
 });
 
 export default router;
