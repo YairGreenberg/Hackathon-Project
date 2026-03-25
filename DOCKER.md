@@ -130,6 +130,47 @@ POST http://face-service:8000/api/analyze
 
 ---
 
+## Statistics API
+
+**Endpoint:**
+```
+GET http://localhost:3000/api/stats
+```
+
+**תשובה:**
+```json
+{
+  "total": 42,
+  "topSenders": [
+    { "sender": "user@example.com", "count": 8 },
+    { "sender": "john@example.com", "count": 6 }
+  ],
+  "byAlbum": [
+    { "_id": "Family", "count": 20 },
+    { "_id": "Work", "count": 15 },
+    { "_id": "Travel", "count": 7 }
+  ],
+  "byDay": [
+    { "_id": "2024-03-25", "count": 5 },
+    { "_id": "2024-03-24", "count": 3 }
+  ],
+  "topTags": [
+    { "_id": "nature", "count": 12 },
+    { "_id": "sunset", "count": 8 },
+    { "_id": "friends", "count": 6 }
+  ]
+}
+```
+
+**מה הנתונים:**
+- `total` - סך כל התמונות בבסיס הנתונים
+- `topSenders` - 5 המשתמשים עם הכי תמונות
+- `byAlbum` - כמה תמונות בכל אלבום
+- `byDay` - כמה תמונות בכל יום (7 ימים אחרונים)
+- `topTags` - 10 התגיות הנפוצות ביותר
+
+---
+
 ## Architecture
 
 ```

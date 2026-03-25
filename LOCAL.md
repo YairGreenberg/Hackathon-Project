@@ -106,6 +106,22 @@ http://localhost:5173
 
 ---
 
+## Statistics API
+
+**Endpoint:**
+```
+GET http://localhost:3000/api/stats
+```
+
+מחזיר ניתוח מלא של התמונות ברשת:
+- Top 5 senders (משתמשים עם הכי תמונות)
+- תמונות לפי אלבום
+- תמונות לפי יום (7 ימים אחרונים)
+- Top 10 תגיות
+- סך הכל תמונות
+
+---
+
 ## Troubleshooting
 
 ### ❌ Face Service - "ModuleNotFoundError: No module named 'dlib'"
