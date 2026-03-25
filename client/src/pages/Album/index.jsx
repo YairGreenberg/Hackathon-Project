@@ -36,8 +36,8 @@ function index() {
       try {
         // -- Add real url with id --
         // const url = `http://localhost:3000/api/photos/${id}`;
-        console.log('start');
-        
+        console.log("start");
+
         const url = `http://localhost:3000/api/photos`;
         const {data} = await axios.get(url);
         console.log({data});
@@ -67,8 +67,17 @@ function index() {
   const prevImage = () => {
     setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
-  // -- TO-DO -- add loading
   const {sendToPrint} = usePrint();
+
+  const handleDelete = async (photoId) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/photos/${photoId}`);
+      // מעדכן UI בלי ריפרש
+      setImages((prev) => prev.filter((img) => img._id !== photoId));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
   return (
     <section className="main-gallery-section">
       <h1>Album Name</h1>
@@ -76,7 +85,18 @@ function index() {
       <div className="gallery">
         {images.map((img, index) => (
           <div key={index} className="card" onClick={() => openImage(index)}>
-            <img src={img.fileUrl} alt="gallery" />
+            <div key={index} className="card">
+              <img src={img.fileUrl} alt="gallery" />
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation(); // שלא יפתח את המודל
+                  handleDelete(img._id);
+                }}
+              >
+                🗑️
+              </button>
+            </div>
           </div>
         ))}
 
@@ -90,7 +110,11 @@ function index() {
               ‹
             </button>
 
-            <img className="modal-img" src={images[selectedIndex].fileUrl} alt="big" />
+            <img
+              className="modal-img"
+              src={images[selectedIndex].fileUrl}
+              alt="big"
+            />
 
             <button className="nav right" onClick={nextImage}>
               ›
