@@ -5,6 +5,7 @@ import cors from "cors";
 import TelegramBot from "node-telegram-bot-api";
 import photosRouter from "./routes/photos.js";
 import albumsRouter from "./routes/albums.js";
+import statsRouter from "./routes/stats.js";
 import { uploadToCloudinary } from "./services/cloudinaryService.js";
 import https from "https"; // נדרש לפתרון שגיאת ה-SSL
 
@@ -157,5 +158,6 @@ bot.on("callback_query", async (query) => {
 
 app.use("/api/photos", photosRouter);
 app.use("/api/albums", albumsRouter);
+app.use("/api/stats", statsRouter);
 
 app.listen(3000, () => console.log(`🚀 Server running on port 3000`));
