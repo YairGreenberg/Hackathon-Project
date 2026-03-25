@@ -7,8 +7,8 @@ function Routers() {
   return (
     <Routes>
       <Route path="/album/allImages" element={<AllImages />} />
-      <Route path="/albums" element={<Albums />} />
-      <Route path="/album/:is" element={<Album />} />
+      <Route path="/" element={<Albums />} />
+      <Route path="/album/:id" element={<Album />} />
     </Routes>
   );
 }
