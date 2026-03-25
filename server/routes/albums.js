@@ -1,5 +1,5 @@
 import express from "express";
-import {ObjectId} from "mongodb";
+import { ObjectId } from "mongodb";
 import dbMongo from "../data/coonected Mongo.js";
 
 const router = express.Router();
@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
       albums.map(async (albom) => {
         const img = await dbMongo
           .collection("photos")
-          .find({albumName: albom.name})
+          .find({ albumName: albom.name })
           .toArray();
 
         return {
@@ -28,54 +28,66 @@ router.get("/", async (req, res) => {
 
     console.log(newAlbums);
 
-    res.json({count: newAlbums.length, albums: newAlbums});
+    res.json({ count: newAlbums.length, albums: newAlbums });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({error: "שגיאה בשליפת אלבומים"});
+    res.status(500).json({ error: "שגיאה בשליפת אלבומים" });
   }
   // });
 });
 
-// POST /api/albums — צור אלבום חדש
+// POST /api/albums — צור אלבום חדש (עם בדיקת כפילות)
 router.post("/", async (req, res) => {
   try {
-    const {name, description = ""} = req.body;
+    const { name, description = "" } = req.body;
 
     if (!name) {
-      return res.status(400).json({error: "חסר שם אלבום"});
+      return res.status(400).json({ error: "חסר שם אלבום" });
+    }
+
+    // בדיקה אם האלבום כבר קיים
+    const existingAlbum = await dbMongo
+      .collection("albums")
+      .findOne({ name: name.trim() });
+
+    if (existingAlbum) {
+      // אם קיים, נחזיר את האלבום הקיים במקום ליצור חדש
+      return res.json({
+        success: true,
+        album: existingAlbum,
+        message: "אלבום כבר קיים",
+      });
     }
 
     const album = {
-      name,
+      name: name.trim(),
       description,
       createdAt: new Date().toISOString(),
     };
 
     const result = await dbMongo.collection("albums").insertOne(album);
-
-    console.log(`📁 אלבום נוצר: ${name}`);
-    res.json({success: true, album: {...album, id: result.insertedId}});
+    console.log(`📁 אלבום חדש נוצר: ${name}`);
+    res.json({ success: true, album: { ...album, id: result.insertedId } });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({error: "שגיאה ביצירת אלבום"});
+    res.status(500).json({ error: "שגיאה ביצירת אלבום" });
   }
 });
 
 // DELETE /api/albums/:id — מחיקת אלבום
 router.delete("/:id", async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const result = await dbMongo
       .collection("albums")
-      .deleteOne({_id: new ObjectId(id)});
+      .deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({error: "אלבום לא נמצא"});
+      return res.status(404).json({ error: "אלבום לא נמצא" });
     }
 
-    res.json({success: true});
+    res.json({ success: true });
   } catch (err) {
-    res.status(500).json({error: "שגיאה במחיקת אלבום"});
+    res.status(500).json({ error: "שגיאה במחיקת אלבום" });
   }
 });
 
