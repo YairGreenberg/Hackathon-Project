@@ -79,6 +79,124 @@ http://localhost:5173
 
 ---
 
+## 🧪 בדיקת API Endpoints מהטרמינל
+
+### 📸 Photos Endpoints
+
+**Get all photos:**
+```bash
+curl http://localhost:3000/api/photos
+```
+
+**Create new photo:**
+```bash
+curl -X POST http://localhost:3000/api/photos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/photo.jpg",
+    "albumName": "Family",
+    "sender": "user@example.com",
+    "tags": ["nature", "sunset"]
+  }'
+```
+
+---
+
+### 📁 Albums Endpoints
+
+**Get all albums:**
+```bash
+curl http://localhost:3000/api/albums
+```
+
+**Create new album:**
+```bash
+curl -X POST http://localhost:3000/api/albums \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Vacation 2024",
+    "description": "Summer trip photos"
+  }'
+```
+
+---
+
+### 📊 Statistics Endpoint
+
+**Get statistics:**
+```bash
+curl http://localhost:3000/api/stats
+```
+
+**Response example:**
+```json
+{
+  "total": 42,
+  "topSenders": [{"sender": "user@example.com", "count": 8}],
+  "byAlbum": [{"_id": "Family", "count": 20}],
+  "byDay": [{"_id": "2024-03-25", "count": 5}],
+  "topTags": [{"_id": "nature", "count": 12}]
+}
+```
+
+---
+
+### 🎭 Face-Service Endpoints
+
+**Analyze image for faces:**
+```bash
+curl -X POST http://localhost:8000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/image.jpg"
+  }'
+```
+
+**Response example:**
+```json
+{
+  "metadata": {"Model": "Canon EOS", "DateTime": "2024-03-25T10:30:00"},
+  "faces_detected": 2,
+  "faces": [
+    {
+      "boundingBox": {"top": 50, "right": 150, "bottom": 200, "left": 100},
+      "encoding": [0.1234, -0.5678, ...]
+    }
+  ]
+}
+```
+
+**View Face-Service Swagger UI:**
+```bash
+open http://localhost:8000/docs
+```
+
+---
+
+### 🗄️ MongoDB Direct Access
+
+**Connect to MongoDB:**
+```bash
+mongosh "mongodb://localhost:27017/Albums"
+```
+
+**View collections:**
+```javascript
+show collections
+```
+
+**Query photos:**
+```javascript
+db.photos.find().pretty()
+```
+
+**Count total photos:**
+```javascript
+db.photos.countDocuments()
+```
+
+---
+
 ## קבצים חשובים
 
 | ملف | מטרה |
