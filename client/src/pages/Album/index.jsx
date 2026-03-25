@@ -25,7 +25,7 @@ function index() {
         );
         console.log(albumName);
 
-        const url = `http://localhost:3000/api/photos/${albumName}`;
+        const url = `http://localhost:3000/api/photos/album/${albumName}`;
         const {data} = await axios.get(url);
         setImages(data.photos);
       } catch (error) {
