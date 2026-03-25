@@ -1,0 +1,219 @@
+# הרצה עם Docker
+
+## דרישות מוקדמות
+
+- **Docker** מותקן
+- **Docker Compose** מותקן
+
+```bash
+# בדוק גרסאות
+docker --version
+docker-compose --version
+```
+
+---
+
+## הגדרה ראשונית
+
+### 1️⃣ הגדר Credentials
+
+```bash
+# העתק את ה-example ל-.env
+cp server/.env.example server/.env
+
+# עדכן את ה-credentials בקובץ זה
+nano server/.env
+
+# עדכן:
+# - TELEGRAM_TOKEN
+# - CLOUDINARY_API_KEY/SECRET
+# - משאר הערכים
+```
+
+**שים לב:** `MONGO_URI` צריך להישאר:
+```
+MONGO_URI=mongodb://mongo:27017/Albums
+```
+
+(שם הקונטיינר: `mongo`)
+
+---
+
+## הרצה
+
+### 🚀 הפעל את כל ה-Stack
+
+```bash
+docker-compose up --build
+```
+
+**Output צפוי:**
+```
+✅ client-1 | listening on port 5173
+✅ server-1 | 🚀 Server running on port 3000
+✅ mongo-1  | Waiting for connections
+```
+
+### 🛑 עצור את כל הקונטיינרים
+
+```bash
+docker-compose down
+```
+
+### 🗑️ מחק volumes (reset DB)
+
+```bash
+docker-compose down -v
+```
+
+---
+
+## גישה לאפליקציה
+
+```
+http://localhost:5173
+```
+
+**API Server:** `http://localhost:3000`
+**MongoDB:** `localhost:27017`
+
+---
+
+## קבצים חשובים
+
+| ملف | מטרה |
+|------|--------|
+| `docker-compose.yml` | הגדרת כל 3 השירותים |
+| `Dockerfile` | בנייה של server image |
+| `client/Dockerfile` | בנייה של client image |
+| `client/nginx.conf` | Nginx config ל-proxy |
+| `data/mongodb/` | MongoDB persistent volume |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│      Docker Network (app-network)       │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌──────────────┐  ┌──────────────┐   │
+│  │   Client     │  │    Server    │   │
+│  │ (Nginx 5173) │◄─┤  (Node 3000) │   │
+│  └──────────────┘  └──────┬───────┘   │
+│                           │            │
+│                    ┌──────▼───────┐   │
+│                    │  MongoDB     │   │
+│                    │  (27017)     │   │
+│                    └──────────────┘   │
+│                                         │
+└─────────────────────────────────────────┘
+         ▲
+         │ (localhost:5173)
+      Browser
+```
+
+---
+
+## Troubleshooting
+
+### ❌ "Port already in use"
+
+```bash
+# בדוק איזה process משתמש בport
+lsof -i :5173
+lsof -i :3000
+lsof -i :27017
+
+# עצור את ה-container
+docker-compose down
+
+# או שנה את ה-port ב-docker-compose.yml
+```
+
+### ❌ "MongoDB won't start"
+
+```bash
+# בדוק את הלוגים
+docker-compose logs mongo
+
+# reset את ה-volume
+docker-compose down -v
+docker-compose up --build
+```
+
+### ❌ "Can't reach API from client"
+
+- וודא ש-`server` קונטיינר רץ בתוך network
+- בדוק ש-nginx.conf מכוונת נכון:
+  ```nginx
+  proxy_pass http://server:3000;
+  ```
+
+### ❌ "Build failed"
+
+```bash
+# בנה מחדש בלי cache
+docker-compose build --no-cache
+
+# או reset הכל
+docker system prune -a
+docker-compose up --build
+```
+
+---
+
+## Logging
+
+### צפה בלוגים של שרת מסוים
+
+```bash
+# Server logs
+docker-compose logs server -f
+
+# Client logs
+docker-compose logs client -f
+
+# MongoDB logs
+docker-compose logs mongo -f
+
+# הכל
+docker-compose logs -f
+```
+
+---
+
+## Development vs Production
+
+| | Local | Docker |
+|---|---|---|
+| **MongoDB** | `localhost:27017` | `mongo:27017` |
+| **Server** | `localhost:3000` | `http://server:3000` |
+| **Client** | `localhost:5173` | `localhost:5173` |
+| **Hot Reload** | ✅ Nodemon + Vite | ✅ Containers |
+| **Use Case** | Development | Testing/Production |
+
+---
+
+## Volume Persistence
+
+MongoDB data שמור ב:
+```
+./data/mongodb/
+```
+
+זה persistent בין restarts:
+```bash
+docker-compose down
+docker-compose up  # data עדיין שם
+```
+
+---
+
+## Resources
+
+- [Docker Docs](https://docs.docker.com/)
+- [Docker Compose Docs](https://docs.docker.com/compose/)
+- [Nginx Docs](https://nginx.org/en/docs/)
+- [MongoDB Docker Image](https://hub.docker.com/_/mongo)
