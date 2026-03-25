@@ -2,12 +2,13 @@ import React from "react";
 import {Route, Routes} from "react-router";
 import Albums from './pages/Alboms/index'
 import Album from './pages/Album/index'
+import AllImages from './pages/AllImages/index'
 function Routers() {
   return (
     <Routes>
-      {/* <Route path="/album/all" element={<Album />} /> */}
+      <Route path="/album/allImages" element={<AllImages />} />
       <Route path="/albums" element={<Albums />} />
-      <Route path="/album/:id" element={<Album />} />
+      <Route path="/album/:is" element={<Album />} />
     </Routes>
   );
 }

@@ -20,9 +20,7 @@ function index() {
     async function setData() {
       setIsLoading(true);
       try {
-        const {data:albumName} = await axios.get(`http://localhost:3000/api/photos/id/${id}`);
-
-        const url = `http://localhost:3000/api/photos${albumName}`;
+        const url = `http://localhost:3000/api/photos`;
         const {data} = await axios.get(url);
         setImages(data.photos);
       } catch (error) {
