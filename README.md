@@ -40,10 +40,17 @@ MongoDB    Face-Service API
 |-----------|-----------|---------|
 | Frontend | React 18 + Vite | User interface |
 | Backend | Node.js + Express | API and database management |
-| Database | MongoDB 7 | Photo and metadata storage |
+| Database | MongoDB 7 | Metadata storage (sender, album, tags, dates) |
 | Face Recognition | Python + FastAPI + dlib | Face detection and analysis |
-| Storage | Cloudinary | Cloud photo storage |
+| Storage | Cloudinary | Cloud photo files storage |
 | Bot | Telegram Bot API | User interface |
+
+**Why Both MongoDB and Cloudinary?**
+
+- **Cloudinary**: Stores actual photo files (binary data). Optimized for large files and global distribution.
+- **MongoDB**: Stores photo metadata (who sent it, album name, tags, timestamps, face analysis). Enables fast queries for statistics and filtering.
+
+Separating binary files from metadata allows efficient querying without downloading large images.
 
 ## Quick Start
 
