@@ -1,402 +1,107 @@
-# הרצה עם Docker
+# 🐳 הרצה עם Docker
+
+ההדרך הקל ביותר להרצה של כל הפרויקט בבת אחת.
 
 ## דרישות מוקדמות
 
-- **Docker** מותקן
-- **Docker Compose** מותקן
+- Docker ו-Docker Compose מותקנים
+- Telegram Token ו-Cloudinary credentials
+
+## הגדרה
 
 ```bash
-# בדוק גרסאות
-docker --version
-docker-compose --version
-```
-
----
-
-## הגדרה ראשונית
-
-### 1️⃣ הגדר Credentials
-
-```bash
-# העתק את ה-example ל-.env
+# 1. הכן את ה-credentials
 cp server/.env.example server/.env
+nano server/.env  # עדכן TELEGRAM_TOKEN ו-Cloudinary info
 
-# עדכן את ה-credentials בקובץ זה
-nano server/.env
-
-# עדכן:
-# - TELEGRAM_TOKEN
-# - CLOUDINARY_API_KEY/SECRET
-# - משאר הערכים
+# שים לב: MONGO_URI חייב להישאר: mongodb://mongo:27017/Albums
 ```
 
-**שים לב:** `MONGO_URI` צריך להישאר:
-```
-MONGO_URI=mongodb://mongo:27017/Albums
-```
-
-(שם הקונטיינר: `mongo`)
-
----
-
-## הרצה
-
-### 🚀 הפעל את כל ה-Stack
+## הפעלה
 
 ```bash
+# הפעל את כל 4 ה-Services
 docker-compose up --build
-```
 
-**Output צפוי:**
-```
-✅ client-1 | listening on port 5173
-✅ server-1 | 🚀 Server running on port 3000
-✅ mongo-1  | Waiting for connections
-```
-
-### 🛑 עצור את כל הקונטיינרים
-
-```bash
+# בחלון אחר כדי להפסיק
 docker-compose down
 ```
 
-### 🗑️ מחק volumes (reset DB)
+**גישה:**
+- 🌐 Client: http://localhost:5173
+- 🔌 API: http://localhost:3000
+- 🎭 Face-Service Docs: http://localhost:8000/docs
+- 🗄️ MongoDB: localhost:27017
 
-```bash
-docker-compose down -v
-```
-
----
-
-## גישה לאפליקציה
-
-```
-http://localhost:5173
-```
-
-**API Server:** `http://localhost:3000`
-**MongoDB:** `localhost:27017`
-
----
-
-## 🧪 בדיקת API Endpoints מהטרמינל
-
-### 📸 Photos Endpoints
-
-**Get all photos:**
-```bash
-curl http://localhost:3000/api/photos
-```
-
-**Create new photo:**
-```bash
-curl -X POST http://localhost:3000/api/photos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://example.com/photo.jpg",
-    "albumName": "Family",
-    "sender": "user@example.com",
-    "tags": ["nature", "sunset"]
-  }'
-```
-
----
-
-### 📁 Albums Endpoints
-
-**Get all albums:**
-```bash
-curl http://localhost:3000/api/albums
-```
-
-**Create new album:**
-```bash
-curl -X POST http://localhost:3000/api/albums \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Vacation 2024",
-    "description": "Summer trip photos"
-  }'
-```
-
----
-
-### 📊 Statistics Endpoint
-
-**Get statistics:**
-```bash
-curl http://localhost:3000/api/stats
-```
-
-**Response example:**
-```json
-{
-  "total": 42,
-  "topSenders": [{"sender": "user@example.com", "count": 8}],
-  "byAlbum": [{"_id": "Family", "count": 20}],
-  "byDay": [{"_id": "2024-03-25", "count": 5}],
-  "topTags": [{"_id": "nature", "count": 12}]
-}
-```
-
----
-
-### 🎭 Face-Service Endpoints
-
-**Analyze image for faces:**
-```bash
-curl -X POST http://localhost:8000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://example.com/image.jpg"
-  }'
-```
-
-**Response example:**
-```json
-{
-  "metadata": {"Model": "Canon EOS", "DateTime": "2024-03-25T10:30:00"},
-  "faces_detected": 2,
-  "faces": [
-    {
-      "boundingBox": {"top": 50, "right": 150, "bottom": 200, "left": 100},
-      "encoding": [0.1234, -0.5678, ...]
-    }
-  ]
-}
-```
-
-**View Face-Service Swagger UI:**
-```bash
-open http://localhost:8000/docs
-```
-
----
-
-### 🗄️ MongoDB Direct Access
-
-**Connect to MongoDB:**
+## MongoDB Direct Access
 ```bash
 mongosh "mongodb://localhost:27017/Albums"
-```
 
-**View collections:**
-```javascript
+# בתוך mongosh:
 show collections
-```
-
-**Query photos:**
-```javascript
 db.photos.find().pretty()
-```
-
-**Count total photos:**
-```javascript
 db.photos.countDocuments()
 ```
 
 ---
 
-## קבצים חשובים
+## API Endpoints - בדיקות מהטרמינל
 
-| ملف | מטרה |
-|------|--------|
-| `docker-compose.yml` | הגדרת כל 4 השירותים |
-| `Dockerfile` | בנייה של server image |
-| `client/Dockerfile` | בנייה של client image |
-| `face-service/Dockerfile` | בנייה של face-service image |
-| `client/nginx.conf` | Nginx config ל-proxy |
-| `data/mongodb/` | MongoDB persistent volume |
+### Photos
+```bash
+# Get all
+curl http://localhost:3000/api/photos
 
----
-
-## Face Service API
-
-**Endpoint:**
-```
-POST http://face-service:8000/api/analyze
+# Create
+curl -X POST http://localhost:3000/api/photos \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/photo.jpg","albumName":"Family","sender":"user@example.com","tags":["nature"]}'
 ```
 
-**בקשה:**
-```json
-{
-  "url": "https://example.com/image.jpg"
-}
+### Albums
+```bash
+# Get all
+curl http://localhost:3000/api/albums
+
+# Create
+curl -X POST http://localhost:3000/api/albums \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Family","description":"Family photos"}'
 ```
 
-**תשובה:**
-```json
-{
-  "metadata": {
-    "Model": "Canon EOS",
-    "DateTime": "2024-03-25T10:30:00"
-  },
-  "faces_detected": 2,
-  "faces": [
-    {
-      "boundingBox": {
-        "top": 50,
-        "right": 150,
-        "bottom": 200,
-        "left": 100
-      },
-      "encoding": [0.1234, -0.5678, ...]
-    }
-  ]
-}
+### Statistics
+```bash
+curl http://localhost:3000/api/stats | jq '.'
 ```
+**תשובה:** `total`, `topSenders`, `byAlbum`, `byDay`, `topTags`
 
----
-
-## Statistics API
-
-**Endpoint:**
+### Face-Service (זיהוי פנים)
+```bash
+curl -X POST http://localhost:8000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com/image.jpg"}'
 ```
-GET http://localhost:3000/api/stats
-```
-
-**תשובה:**
-```json
-{
-  "total": 42,
-  "topSenders": [
-    { "sender": "user@example.com", "count": 8 },
-    { "sender": "john@example.com", "count": 6 }
-  ],
-  "byAlbum": [
-    { "_id": "Family", "count": 20 },
-    { "_id": "Work", "count": 15 },
-    { "_id": "Travel", "count": 7 }
-  ],
-  "byDay": [
-    { "_id": "2024-03-25", "count": 5 },
-    { "_id": "2024-03-24", "count": 3 }
-  ],
-  "topTags": [
-    { "_id": "nature", "count": 12 },
-    { "_id": "sunset", "count": 8 },
-    { "_id": "friends", "count": 6 }
-  ]
-}
-```
-
-**מה הנתונים:**
-- `total` - סך כל התמונות בבסיס הנתונים
-- `topSenders` - 5 המשתמשים עם הכי תמונות
-- `byAlbum` - כמה תמונות בכל אלבום
-- `byDay` - כמה תמונות בכל יום (7 ימים אחרונים)
-- `topTags` - 10 התגיות הנפוצות ביותר
-
----
-
-## Architecture
-
-```
-┌───────────────────────────────────────────────────────────┐
-│          Docker Network (app-network)                     │
-├───────────────────────────────────────────────────────────┤
-│                                                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │   Client     │  │    Server    │  │Face Service  │   │
-│  │(Nginx 5173)  │◄─┤  (Node 3000) │─►│  (Python     │   │
-│  └──────────────┘  └──────┬───────┘  │   8000)      │   │
-│                           │           └──────────────┘   │
-│                    ┌──────▼───────┐                       │
-│                    │  MongoDB     │                       │
-│                    │  (27017)     │                       │
-│                    └──────────────┘                       │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-         ▲
-         │ (localhost:5173)
-      Browser
-```
-
-**Face Service Role:**
-- 📸 מקבל URLs של תמונות מה-Server
-- 🔍 מנתח פנים ומטא-דטה EXIF
-- 📤 מחזיר face encodings וקואורדינטות
-- Endpoint: `POST /api/analyze`
+**Docs:** http://localhost:8000/docs
 
 ---
 
 ## Troubleshooting
 
-### ❌ "Port already in use"
-
 ```bash
-# בדוק איזה process משתמש בport
-lsof -i :5173
-lsof -i :3000
-lsof -i :27017
-
-# עצור את ה-container
+# Port already in use?
 docker-compose down
 
-# או שנה את ה-port ב-docker-compose.yml
-```
-
-### ❌ "MongoDB won't start"
-
-```bash
-# בדוק את הלוגים
+# MongoDB issues?
 docker-compose logs mongo
+docker-compose down -v && docker-compose up --build
 
-# reset את ה-volume
-docker-compose down -v
-docker-compose up --build
-```
-
-### ❌ "Can't reach API from client"
-
-- וודא ש-`server` קונטיינר רץ בתוך network
-- בדוק ש-nginx.conf מכוונת נכון:
-  ```nginx
-  proxy_pass http://server:3000;
-  ```
-
-### ❌ "Build failed"
-
-```bash
-# בנה מחדש בלי cache
+# Build failed?
 docker-compose build --no-cache
 
-# או reset הכל
-docker system prune -a
-docker-compose up --build
-```
-
----
-
-## Logging
-
-### צפה בלוגים של שרת מסוים
-
-```bash
-# Server logs
-docker-compose logs server -f
-
-# Client logs
-docker-compose logs client -f
-
-# MongoDB logs
-docker-compose logs mongo -f
-
-# הכל
+# View logs
 docker-compose logs -f
+docker-compose logs server -f
 ```
-
----
-
-## Development vs Production
-
-| | Local | Docker |
-|---|---|---|
-| **MongoDB** | `localhost:27017` | `mongo:27017` |
-| **Server** | `localhost:3000` | `http://server:3000` |
-| **Client** | `localhost:5173` | `localhost:5173` |
-| **Hot Reload** | ✅ Nodemon + Vite | ✅ Containers |
-| **Use Case** | Development | Testing/Production |
 
 ---
 
@@ -488,24 +193,6 @@ http://localhost:5173
 
 ---
 
-## Volume Persistence
+## Data Persistence
 
-MongoDB data שמור ב:
-```
-./data/mongodb/
-```
-
-זה persistent בין restarts:
-```bash
-docker-compose down
-docker-compose up  # data עדיין שם
-```
-
----
-
-## Resources
-
-- [Docker Docs](https://docs.docker.com/)
-- [Docker Compose Docs](https://docs.docker.com/compose/)
-- [Nginx Docs](https://nginx.org/en/docs/)
-- [MongoDB Docker Image](https://hub.docker.com/_/mongo)
+MongoDB data שמור ב-`./data/mongodb/` (persistent בין restarts)
