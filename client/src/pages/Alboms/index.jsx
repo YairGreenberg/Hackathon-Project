@@ -64,9 +64,9 @@ export default function index() {
           albums.map((album) => (
             
             <div
-              key={album.id}
+              key={album._id}
               className="album-card"
-              onClick={() => handleClick(album.id)}
+              onClick={() => handleClick(album._id)}
             >
               <img src={album.img?.fileUrl} alt={album.title} />
               <div className="overlay">
