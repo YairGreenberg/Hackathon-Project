@@ -10,7 +10,7 @@ export const usePrint = create((set) => ({
     try {
       // -- add url --
       const url = "";
-      const [data] = await axios.post(url, {id});
+      const {data} = await axios.post(url, {id});
       set({message: data});
     } catch (error) {
       console.error(error.message);

@@ -24,3 +24,12 @@ export const uploadToCloudinary = (fileStream) => {
     fileStream.pipe(uploadStream);
   });
 };
+
+export const deleteFromCloudinary = (publicId) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(publicId, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+  });
+};

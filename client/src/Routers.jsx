@@ -5,7 +5,7 @@ import Album from './pages/Album/index'
 function Routers() {
   return (
     <Routes>
-      <Route path="/" element={<>home</>} />
+      {/* <Route path="/album/all" element={<Album />} /> */}
       <Route path="/albums" element={<Albums />} />
       <Route path="/album/:id" element={<Album />} />
     </Routes>

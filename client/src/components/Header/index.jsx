@@ -6,7 +6,7 @@ function index() {
      <header>
         <nav>
           <Link to='/albums'>All Albums</Link>
-          <Link to='/'>home</Link>
+          <Link to='/album/all'>All photos</Link>
         </nav>
       </header>
   )

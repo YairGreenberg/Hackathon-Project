@@ -35,9 +35,14 @@ function index() {
       setIsLoading(true);
       try {
         // -- Add real url with id --
-        const url = "";
-        const [data] = await axios.get(url);
-        setAlbums(data);
+        // const url = `http://localhost:3000/api/photos/${id}`;
+        console.log('start');
+        
+        const url = `http://localhost:3000/api/photos`;
+        const {data} = await axios.get(url);
+        console.log({data});
+
+        setImages(data.photos);
       } catch (error) {
         console.error(error.message);
       } finally {
@@ -71,7 +76,7 @@ function index() {
       <div className="gallery">
         {images.map((img, index) => (
           <div key={index} className="card" onClick={() => openImage(index)}>
-            <img src={img} alt="gallery" />
+            <img src={img.fileUrl} alt="gallery" />
           </div>
         ))}
 
@@ -85,7 +90,7 @@ function index() {
               ‹
             </button>
 
-            <img className="modal-img" src={images[selectedIndex]} alt="big" />
+            <img className="modal-img" src={images[selectedIndex].fileUrl} alt="big" />
 
             <button className="nav right" onClick={nextImage}>
               ›

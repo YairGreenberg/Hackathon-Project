@@ -38,9 +38,10 @@ export default function index() {
       setIsLoading(true);
       try {
         // -- Add real url --
-        const url = "";
-        const [data] = await axios.get(url);
-        setAlbums(data);
+        // const url = "http://localhost:3000/api/albums";
+        // const {data} = await axios.get(url);
+        // console.log(data);
+        // setAlbums(data.albums);
       } catch (error) {
         console.error(error.message);
       } finally {
@@ -59,18 +60,19 @@ export default function index() {
       <h1>Wellcom to album page</h1>
       {isLoading && <h1>Loading...</h1>}
       <div className="albums-container">
-        {albums.map((album) => (
-          <div
-            key={album.id}
-            className="album-card"
-            onClick={() => handleClick(album.id)}
-          >
-            <img src={album.cover} alt={album.title} />
-            <div className="overlay">
-              <h2>{album.title}</h2>
+        {albums &&
+          albums.map((album) => (
+            <div
+              key={album.id}
+              className="album-card"
+              onClick={() => handleClick(album.id)}
+            >
+              <img src={album.cover} alt={album.title} />
+              <div className="overlay">
+                <h2>{album.title}</h2>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </>
   );
