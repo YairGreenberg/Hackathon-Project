@@ -37,6 +37,17 @@ services:
     networks:
       - app-network
 
+  face-service:
+    build: ./face-service
+    container_name: photo-album-face-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - app-network
+
 volumes:
   mongo_data:
     driver: local

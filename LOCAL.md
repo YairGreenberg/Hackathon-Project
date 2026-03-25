@@ -54,18 +54,46 @@ npm install npm-run-all --save-dev
 npm run dev
 ```
 
-### אפשרות 2️⃣ - בשני טרמינלים (מומלץ)
+### אפשרות 2️⃣ - בשלושה טרמינלים (מומלץ - עם Face Service)
 
-**טרמינל 1 - Server:**
+**טרמינל 1 - Face Service (Python):**
+```bash
+cd face-service
+pip install -r requirements.txt
+python -m uvicorn main:app --host localhost --port 8000 --reload
+```
+
+**טרמינל 2 - Server (Node.js):**
 ```bash
 cd server
 npm run dev
 ```
 
-**טרמינל 2 - Client:**
+**טרמינל 3 - Client (React):**
 ```bash
 cd client
 npm run dev
+```
+
+### דרישות נוספות
+
+**Face Service דורש:**
+- Python 3.10+
+- [dlib](https://github.com/davisking/dlib) - requires C++ build tools
+- [face_recognition](https://github.com/ageitgey/face_recognition) library
+
+**התקנה (macOS):**
+```bash
+brew install cmake
+cd face-service
+pip install -r requirements.txt
+```
+
+**התקנה (Ubuntu/Debian):**
+```bash
+sudo apt-get install build-essential cmake python3-dev
+cd face-service
+pip install -r requirements.txt
 ```
 
 ### 🚀 גישה לאפליקציה
@@ -79,6 +107,31 @@ http://localhost:5173
 ---
 
 ## Troubleshooting
+
+### ❌ Face Service - "ModuleNotFoundError: No module named 'dlib'"
+
+```bash
+# התקן build tools תחילה
+# macOS:
+brew install cmake
+
+# Ubuntu/Debian:
+sudo apt-get install build-essential cmake python3-dev
+
+# אח"כ התקן מחדש
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### ❌ Face Service - "Connection refused on port 8000"
+
+```bash
+# בדוק אם Python רץ
+lsof -i :8000
+
+# או הרץ עם לוג יותר מסבבר
+python -m uvicorn main:app --host localhost --port 8000 --reload
+```
 
 ### ❌ MongoDB לא מתחבר
 

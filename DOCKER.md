@@ -83,36 +83,81 @@ http://localhost:5173
 
 | ملف | מטרה |
 |------|--------|
-| `docker-compose.yml` | הגדרת כל 3 השירותים |
+| `docker-compose.yml` | הגדרת כל 4 השירותים |
 | `Dockerfile` | בנייה של server image |
 | `client/Dockerfile` | בנייה של client image |
+| `face-service/Dockerfile` | בנייה של face-service image |
 | `client/nginx.conf` | Nginx config ל-proxy |
 | `data/mongodb/` | MongoDB persistent volume |
+
+---
+
+## Face Service API
+
+**Endpoint:**
+```
+POST http://face-service:8000/api/analyze
+```
+
+**בקשה:**
+```json
+{
+  "url": "https://example.com/image.jpg"
+}
+```
+
+**תשובה:**
+```json
+{
+  "metadata": {
+    "Model": "Canon EOS",
+    "DateTime": "2024-03-25T10:30:00"
+  },
+  "faces_detected": 2,
+  "faces": [
+    {
+      "boundingBox": {
+        "top": 50,
+        "right": 150,
+        "bottom": 200,
+        "left": 100
+      },
+      "encoding": [0.1234, -0.5678, ...]
+    }
+  ]
+}
+```
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│      Docker Network (app-network)       │
-├─────────────────────────────────────────┤
-│                                         │
-│  ┌──────────────┐  ┌──────────────┐   │
-│  │   Client     │  │    Server    │   │
-│  │ (Nginx 5173) │◄─┤  (Node 3000) │   │
-│  └──────────────┘  └──────┬───────┘   │
-│                           │            │
-│                    ┌──────▼───────┐   │
-│                    │  MongoDB     │   │
-│                    │  (27017)     │   │
-│                    └──────────────┘   │
-│                                         │
-└─────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│          Docker Network (app-network)                     │
+├───────────────────────────────────────────────────────────┤
+│                                                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │   Client     │  │    Server    │  │Face Service  │   │
+│  │(Nginx 5173)  │◄─┤  (Node 3000) │─►│  (Python     │   │
+│  └──────────────┘  └──────┬───────┘  │   8000)      │   │
+│                           │           └──────────────┘   │
+│                    ┌──────▼───────┐                       │
+│                    │  MongoDB     │                       │
+│                    │  (27017)     │                       │
+│                    └──────────────┘                       │
+│                                                           │
+└───────────────────────────────────────────────────────────┘
          ▲
          │ (localhost:5173)
       Browser
 ```
+
+**Face Service Role:**
+- 📸 מקבל URLs של תמונות מה-Server
+- 🔍 מנתח פנים ומטא-דטה EXIF
+- 📤 מחזיר face encodings וקואורדינטות
+- Endpoint: `POST /api/analyze`
 
 ---
 
