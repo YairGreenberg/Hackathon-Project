@@ -26,15 +26,6 @@ services:
     networks:
       - app-network
 
-  ai-service:
-    build: ./ai-service
-    container_name: photo-album-ai
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
-    networks:
-      - app-network
-
   mongo:
     image: mongo:7
     container_name: photo-album-mongo
