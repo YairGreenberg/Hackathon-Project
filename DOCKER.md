@@ -400,6 +400,94 @@ docker-compose logs -f
 
 ---
 
+## 🎯 End-to-End Example - סרט מלא
+
+### שלב 1: הפעל את כל ה-Stack
+```bash
+docker-compose up --build
+```
+
+### שלב 2: אתחל אלבום חדש
+```bash
+curl -X POST http://localhost:3000/api/albums \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Family Vacation",
+    "description": "Summer 2024 photos"
+  }'
+```
+
+### שלב 3: העלה תמונה
+```bash
+curl -X POST http://localhost:3000/api/photos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Hopetoun_falls.jpg/1280px-Hopetoun_falls.jpg",
+    "albumName": "Family Vacation",
+    "sender": "john@example.com",
+    "tags": ["nature", "waterfall", "landscape"]
+  }'
+```
+
+### שלב 4: נתח תמונה עם Face-Service
+```bash
+curl -X POST http://localhost:8000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Hopetoun_falls.jpg/1280px-Hopetoun_falls.jpg"
+  }'
+```
+
+**תגובה:**
+```json
+{
+  "metadata": {"DateTime": "2024-03-25T10:30:00"},
+  "faces_detected": 0,
+  "faces": []
+}
+```
+
+### שלב 5: בדוק סטטיסטיקות
+```bash
+curl http://localhost:3000/api/stats | jq '.'
+```
+
+**תגובה:**
+```json
+{
+  "total": 1,
+  "topSenders": [{"sender": "john@example.com", "count": 1}],
+  "byAlbum": [{"_id": "Family Vacation", "count": 1}],
+  "byDay": [{"_id": "2024-03-25", "count": 1}],
+  "topTags": [{"_id": "nature", "count": 1}, {"_id": "waterfall", "count": 1}, {"_id": "landscape", "count": 1}]
+}
+```
+
+### שלב 6: צפה בתמונות ב-DB
+```bash
+# בחלון טרמינל חדש:
+mongosh "mongodb://localhost:27017/Albums"
+
+# בתוך mongosh:
+db.photos.find().pretty()
+```
+
+### שלב 7: פתח את ה-UI בדפדפן
+```
+http://localhost:5173
+```
+
+---
+
+## ✅ זה הכל! זרימה מלאה:
+1. ✅ אתחול אלבום
+2. ✅ עלאת תמונה עם metadata
+3. ✅ ניתוח תמונה (זיהוי פנים)
+4. ✅ הצגת סטטיסטיקות
+5. ✅ צפייה בממשק ויזואלי
+
+---
+
 ## Volume Persistence
 
 MongoDB data שמור ב:
