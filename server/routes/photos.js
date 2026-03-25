@@ -1,68 +1,81 @@
 import express from 'express';
+import { ObjectId } from 'mongodb';
+import dbMongo from '../data/coonected Mongo.js';
+import { deleteFromCloudinary } from '../services/cloudinaryService.js';
 
 const router = express.Router();
 
-// אחסון זמני — יוחלף ב-MongoDB
-const photos = [];
-
-// GET /api/photos — כל התמונות
-router.get('/', (req, res) => {
-  res.json({ count: photos.length, photos });
-});
-
-// GET /api/photos/:albumName — לפי אלבום
-router.get('/:albumName', (req, res) => {
-  const { albumName } = req.params;
-  const filtered = photos.filter(p => p.albumName === albumName);
-  res.json({ count: filtered.length, photos: filtered });
-});
-
-// POST /api/photos — שמירת תמונה
-router.post('/', (req, res) => {
-  const { fileUrl = '', caption = '', sender = 'unknown', source = 'telegram', albumName = 'general', driveFileId = '' } = req.body;
-
-  const photo = {
-    id: Date.now().toString(),
-    fileUrl,
-    driveFileId,
-    caption,
-    sender,
-    source,
-    albumName,
-    createdAt: new Date().toISOString(),
-  };
-
-  photos.push(photo);
-  console.log(`📸 נשמר מ-${sender} לאלבום ${albumName}`);
-  res.json({ success: true, photo });
-});
-
-// DELETE /api/photos/:id — מחיקת תמונה
-router.delete('/:id', (req, res) => {
-  const { id } = req.params;
-  const index = photos.findIndex(p => p.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({ error: 'תמונה לא נמצאה' });
+// GET /api/photos — שליפת כל התמונות
+router.get('/', async (req, res) => {
+  try {
+    const photos = await dbMongo.collection('photos')
+      .find()
+      .sort({ createdAt: -1 }) // הצגת החדשות ביותר קודם
+      .toArray();
+    res.json({ count: photos.length, photos });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשליפת תמונות' });
   }
-
-  photos.splice(index, 1);
-  res.json({ success: true });
 });
 
-// PATCH /api/photos/:id/album — שייך תמונה לאלבום
-router.patch('/:id/album', (req, res) => {
-  const { id } = req.params;
-  const { albumName } = req.body;
-
-  const photo = photos.find(p => p.id === id);
-
-  if (!photo) {
-    return res.status(404).json({ error: 'תמונה לא נמצאה' });
+// GET /api/photos/:albumName — סינון לפי שם אלבום
+router.get('/album/:albumName', async (req, res) => {
+  try {
+    const { albumName } = req.params;
+    const photos = await dbMongo.collection('photos').find({ albumName }).toArray();
+    res.json({ count: photos.length, albumName, photos });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בסינון לפי אלבום' });
   }
+});
 
-  photo.albumName = albumName;
-  res.json({ success: true, photo });
+// POST /api/photos — שמירת תמונה חדשה
+router.post('/', async (req, res) => {
+  try {
+    const { fileUrl, caption, sender, source, albumName } = req.body;
+
+    if (!fileUrl) return res.status(400).json({ error: 'חסר URL של התמונה' });
+
+    const photo = {
+      fileUrl,
+      caption: caption || '',
+      sender: sender || 'unknown',
+      source: source || 'telegram',
+      albumName: albumName || 'general',
+      createdAt: new Date().toISOString(),
+    };
+
+    const result = await dbMongo.collection('photos').insertOne(photo);
+    res.status(201).json({ success: true, id: result.insertedId });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה בשמירת התמונה ב-DB' });
+  }
+});
+
+// DELETE /api/photos/:id — מחיקת תמונה מה-DB ומהענן
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const photo = await dbMongo.collection('photos').findOne({ _id: new ObjectId(id) });
+    
+    if (!photo) return res.status(404).json({ error: 'התמונה לא קיימת' });
+
+    // חילוץ ה-Public ID לצורך מחיקה מ-Cloudinary
+    try {
+      const parts = photo.fileUrl.split('/');
+      const fileName = parts.pop().split('.')[0];
+      const folder = parts.pop();
+      const publicId = `${folder}/${fileName}`;
+      await deleteFromCloudinary(publicId);
+    } catch (cloudErr) {
+      console.warn("⚠️ לא ניתן היה למחוק מהענן, מוחק מה-DB בכל זאת.");
+    }
+
+    await dbMongo.collection('photos').deleteOne({ _id: new ObjectId(id) });
+    res.json({ success: true, message: 'הוסר בהצלחה' });
+  } catch (err) {
+    res.status(500).json({ error: 'שגיאה במחיקה' });
+  }
 });
 
 export default router;
