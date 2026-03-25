@@ -2,12 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY server/package*.json ./
+# Copy server files
+COPY server/ ./server/
 
+# Copy root package.json if exists, or create minimal one
+COPY package.json* ./
+
+# Install server dependencies
+WORKDIR /app/server
 RUN npm install --production
 
-COPY server/ .
+WORKDIR /app
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["node", "server/index.js"]

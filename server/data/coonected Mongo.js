@@ -6,9 +6,10 @@ const CONTROLER_NAME = 'Albums'
 
 async function connectedToMongo(){
     try{
+        const tlsEnabled = process.env.MONGO_TLS === 'true';
         const client = new MongoClient(MONGO_URL,{
-            tls: true,
-            tlsAllowInvalidCertificates:true
+            tls: tlsEnabled,
+            tlsAllowInvalidCertificates: tlsEnabled
         })
 
         await client.connect();
