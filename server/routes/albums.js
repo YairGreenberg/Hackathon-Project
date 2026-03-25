@@ -4,6 +4,23 @@ import dbMongo from "../data/coonected Mongo.js";
 
 const router = express.Router();
 
+// GET /api/albums/:id — get album name for client
+
+router.get("/:id", async (req, res) => {
+  try {
+    const {id} = req.params;
+    const albums = await dbMongo
+      .collection("albums")
+      .find({_id: new ObjectId(id)})
+      .toArray();
+    console.log({albums});
+    res.send(albums[0]?.name);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({error: "שגיאה בשליפת אלבומים"});
+  }
+});
+
 // GET /api/albums — כל האלבומים
 router.get("/", async (req, res) => {
   try {
@@ -25,9 +42,6 @@ router.get("/", async (req, res) => {
         };
       }),
     );
-
-    console.log(newAlbums);
-
     res.json({count: newAlbums.length, albums: newAlbums});
   } catch (err) {
     console.error(err.message);
