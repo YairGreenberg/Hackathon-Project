@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  client:
+    build: ./client
+    container_name: photo-album-client
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  server:
+    build: .
+    container_name: photo-album-server
+    ports:
+      - "3000:3000"
+    env_file:
+      - server/.env
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_TLS=false
+      - MONGO_URI=mongodb://mongo:27017/Albums
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:7
+    container_name: photo-album-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  mongo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/mongodb
+
+networks:
+  app-network:
+    driver: bridge
