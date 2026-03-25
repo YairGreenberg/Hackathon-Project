@@ -5,43 +5,23 @@ import React, {useState, useEffect} from "react";
 import axios from "axios";
 import {usePrint} from "../../hooke/usePrint";
 
-// import "./gallery.css";
-
-const fakeImages = [
-  "https://picsum.photos/id/1015/600/400",
-  "https://picsum.photos/id/1016/600/400",
-  "https://picsum.photos/id/1018/600/400",
-  "https://picsum.photos/id/1020/600/400",
-  "https://picsum.photos/id/1024/600/400",
-];
+const fakeImages = [];
 
 function index() {
   const [images, setImages] = useState(fakeImages);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState(null);
 
   const params = useParams();
   const {id} = params;
-  // 🔌 כשתרצה API פשוט תפעיל את זה
-  /*
-  useEffect(() => {
-    axios.get("/api/images").then((res) => {
-      setImages(res.data);
-    });
-  }, []);
-  */
+
   useEffect(() => {
     async function setData() {
       setIsLoading(true);
       try {
-        // -- Add real url with id --
-        // const url = `http://localhost:3000/api/photos/${id}`;
-        console.log("start");
-
         const url = `http://localhost:3000/api/photos`;
         const {data} = await axios.get(url);
-        console.log({data});
-
         setImages(data.photos);
       } catch (error) {
         console.error(error.message);
@@ -67,36 +47,52 @@ function index() {
   const prevImage = () => {
     setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
+
   const {sendToPrint} = usePrint();
 
   const handleDelete = async (photoId) => {
     try {
       await axios.delete(`http://localhost:3000/api/photos/${photoId}`);
-      // מעדכן UI בלי ריפרש
       setImages((prev) => prev.filter((img) => img._id !== photoId));
     } catch (error) {
       console.error(error.message);
     }
   };
+
+  const confirmDelete = async () => {
+    if (!imageToDelete) return;
+    await handleDelete(imageToDelete._id);
+    setImageToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setImageToDelete(null);
+  };
+
   return (
     <section className="main-gallery-section">
       <h1>Album Name</h1>
+
       {isLoading && <h1>Loading...</h1>}
+
       <div className="gallery">
         {images.map((img, index) => (
-          <div key={index} className="card" onClick={() => openImage(index)}>
-            <div key={index} className="card">
-              <img src={img.fileUrl} alt="gallery" />
-              <button
-                className="delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation(); // שלא יפתח את המודל
-                  handleDelete(img._id);
-                }}
-              >
-                🗑️
-              </button>
-            </div>
+          <div
+            key={img._id || index}
+            className="card"
+            onClick={() => openImage(index)}
+          >
+            <img src={img.fileUrl} alt="gallery" />
+
+            <button
+              className="delete-btn"
+              onClick={(e) => {
+                e.stopPropagation(); // מונע פתיחת המודל
+                setImageToDelete(img); // רק כאן נשמר אובייקט למחיקה
+              }}
+            >
+              🗑️
+            </button>
           </div>
         ))}
 
@@ -121,7 +117,34 @@ function index() {
             </button>
           </div>
         )}
+
+        {imageToDelete && (
+          <div className="confirm-modal">
+            <div className="confirm-box">
+              <h3>האם אתה בטוח שברצונך למחוק?</h3>
+
+              <img
+                src={imageToDelete.fileUrl}
+                alt="preview"
+                className="preview-img"
+              />
+
+              <p>נשלח על ידי: {imageToDelete.sender}</p>
+              <p>אלבום: {imageToDelete.albumName}</p>
+
+              <div className="actions">
+                <button className="cancel" onClick={cancelDelete}>
+                  ביטול
+                </button>
+                <button className="confirm" onClick={confirmDelete}>
+                  מחק
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
       <button
         className="print"
         onClick={() => {
