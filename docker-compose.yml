@@ -1,6 +1,18 @@
 services:
+  client:
+    build: ./client
+    container_name: photo-album-client
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - app-network
+
   server:
     build: .
+    container_name: photo-album-server
     ports:
       - "3000:3000"
     env_file:
@@ -11,21 +23,32 @@ services:
       - MONGO_TLS=false
       - MONGO_URI=mongodb://mongo:27017/Albums
     restart: unless-stopped
-    
+    networks:
+      - app-network
+
   ai-service:
     build: ./ai-service
     container_name: photo-album-ai
     ports:
       - "8000:8000"
     restart: unless-stopped
+    networks:
+      - app-network
 
   mongo:
     image: mongo:7
+    container_name: photo-album-mongo
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
   mongo_data:
+
+networks:
+  app-network:
+    driver: bridge

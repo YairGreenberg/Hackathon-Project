@@ -10,8 +10,10 @@
 
 ✨ קבצים חדשים שנוספו:
 ✅ .dockerignore - הגדרת files להתעלם מבניית Docker image
-✅ Dockerfile - בניית image של Node.js Alpine
-✅ docker-compose.yml - הרצה של server + MongoDB בקונטיינרים
+✅ Dockerfile - בניית image של Node.js Alpine (server)
+✅ client/Dockerfile - בניית image של Vite + React + Nginx
+✅ client/nginx.conf - קונפיגורציה Nginx לשרת את הקליינט
+✅ docker-compose.yml - הרצה של client + server + MongoDB בקונטיינרים
 ✅ server/routes/stats.js - API endpoint לסטטיסטיקות תמונות
 ✅ server/services/cloudinaryTagging.js - חילוץ תגיות מ-Cloudinary AI
 ✅ update.txt - קובץ עדכונים (זה!)
@@ -57,10 +59,13 @@
 
 🚀 תכונות חדשות שנוספו:
 
-1. Docker Support:
-   • docker-compose.yml - server + MongoDB
-   • Dockerfile - Node.js Alpine image
+1. Full Stack Docker Support:
+   • docker-compose.yml - client + server + MongoDB + AI service
+   • Server Dockerfile - Node.js Alpine image
+   • Client Dockerfile - Vite + React build + Nginx server
+   • nginx.conf - רכס/proxy ל-backend API
    • .dockerignore - אופטימיזציה
+   • Bridge network - תקשורת בין קונטיינרים
 
 2. API Statistics:
    • GET /api/stats - סטטיסטיקות כוללות
@@ -82,11 +87,12 @@
 
 🎯 סטטוס הפרויקט:
 ✅ Server מוכן לייצור (production-ready)
-✅ Docker configuration מוגדרת
+✅ Client React + Vite מוכן
+✅ Docker configuration מלא (client + server + MongoDB)
 ✅ API endpoints כמעט מלא
 ✅ Documentation מלא
 ✅ Statistics API מוכן
-⏳ Client frontend הוסר (כדי להתמקד בserver)
+✅ Nginx proxy + API routing מוגדרים
 
 ⚠️ הערות חשובות:
 • .env file נדרש עם credentials (Telegram, Cloudinary, MongoDB)
@@ -98,7 +104,21 @@
 1. Node.js מקומי: cd server && npm install && npm run dev
 2. Docker: docker-compose up --build
 
-אם אתה מעדכן את הrepo ל-main, תזכור:
-• ה-client folder הוסר בעמוד זה
-• Docker files נוספו
+🎯 עדכונים עדכניים:
+✨ Client Docker Integration:
+  • client/Dockerfile - Multi-stage build (Node + Nginx)
+  • client/nginx.conf - Static asset serving + API proxy
+  • docker-compose.yml - עדכן עם client service
+  • Network configuration - Bridge network לתקשורת בין קונטיינרים
+
+📍 Ports ב-Docker:
+  • Client (Nginx): 5173 - http://localhost:5173
+  • Server: 3000 - http://localhost:3000
+  • MongoDB: 27017 - Internal (mongo:27017)
+  • AI Service: 8000 - http://localhost:8000
+
+🔗 אם אתה מעדכן את הrepo ל-main, תזכור:
+• Client + Server יחד בדוקר (full stack)
+• Nginx עושה proxy של /api requests ל-backend
 • README עודכן לחלוטין
+• Docker-compose מנהל הכל בהתאמה
