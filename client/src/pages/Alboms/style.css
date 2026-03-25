@@ -1,74 +1,97 @@
-.albums-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px;
+/* page */
+.album-page {
+  padding: 20px;
+  text-align: center;
 }
 
+/* grid */
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* card */
 .album-card {
-    position: relative;
-    height: 200px;
-    border-radius: 14px;
-    overflow: hidden;
-    cursor: pointer;
+  position: relative;
+  height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
 }
 
+/* image */
 .album-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.3s;
 }
 
-/* ✨ hover */
 .album-card:hover img {
-    transform: scale(1.1);
+  transform: scale(1.05);
+  filter: brightness(0.8);
 }
 
-/* overlay */
-.overlay {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: flex-end;
-    padding: 15px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-    transition: background 0.3s ease;
+/* delete button */
+.album-delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  background: red;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.overlay h2 {
-    color: white;
-    margin: 0;
-    font-size: 20px;
+/* show on hover */
+.album-card:hover .album-delete-btn {
+  display: block;
 }
 
-/* hover effect */
-.album-card:hover .overlay {
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+/* title */
+.album-title {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  padding: 5px;
 }
 
-.print {
-    position: static;
-    bottom: 10px;
-    left: 40vw;
-    width: fit-content;
-    padding: 12px 12px;
-    border-radius: 15px;
-    background-color: rgb(239, 241, 243);
-    color: black;
-    border: 1px solid black;
+/* modal */
+.album-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.print:hover {
-    transform: scale(1.1);
-    background-color: rgb(188, 191, 193);
-    color: white;
-    border: 1px solid black;
-
+.album-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
 }
 
-.main-gallery-section {
-    width: 100%;
+.album-modal img {
+  width: 120px;
+  margin: 10px 0;
+}
+
+.album-modal-actions {
+  margin-top: 10px;
+}
+
+.album-modal-actions button {
+  margin: 5px;
 }
