@@ -24,7 +24,7 @@ def main():
         "sender": data.get("sender", "unknown"),
         "albumName": data.get("albumName", "general"),
         "source": "telegram",
-        "createdAt": datetime.utcnow()
+        "createdAt": datetime.now()
     }
 
     try:
