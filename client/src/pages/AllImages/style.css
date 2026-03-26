@@ -23,7 +23,6 @@
   filter: brightness(0.9);
 }
 
-/* 🖼️ MODAL */
 
 .modal {
   position: fixed;
@@ -117,6 +116,7 @@
   width: 100%;
   height: auto;
   margin: 10px 0;
+  max-height: 60vh;
 }
 
 .actions {
@@ -137,4 +137,16 @@
   color: white;
   border: none;
   padding: 8px 12px;
+}
+
+.gallery p{
+  color: white;
+  background-color: rgba(83, 82, 82, 0.72);
+  font-size: x-large;
+  /* z-index: 3; */
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+padding: 10px 0;
 }
