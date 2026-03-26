@@ -83,12 +83,12 @@ function index() {
             onClick={() => openImage(index)}
           >
             <img src={img.fileUrl} alt="gallery" />
-
+            <p>{img.albumName}</p>
             <button
               className="delete-btn"
               onClick={(e) => {
-                e.stopPropagation(); // מונע פתיחת המודל
-                setImageToDelete(img); // רק כאן נשמר אובייקט למחיקה
+                e.stopPropagation();
+                setImageToDelete(img);
               }}
             >
               🗑️
@@ -149,7 +149,6 @@ function index() {
         className="print"
         onClick={() => {
           console.log(id);
-          // sendToPrint(id);
         }}
       >
         שלח להדפסה

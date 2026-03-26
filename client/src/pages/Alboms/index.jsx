@@ -59,8 +59,6 @@ export default function AlbumPage() {
             onClick={() => handleClick(album._id)}
           >
             <img src={album.img?.fileUrl} alt={album.name} />
-
-            {/* כפתור מחיקה */}
             <button
               className="album-delete-btn"
               onClick={(e) => {
@@ -78,7 +76,6 @@ export default function AlbumPage() {
         ))}
       </div>
 
-      {/* MODAL */}
       {albumToDelete && (
         <div className="album-modal-backdrop">
           <div className="album-modal">

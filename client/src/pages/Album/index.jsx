@@ -92,8 +92,8 @@ function index() {
             <button
               className="delete-btn"
               onClick={(e) => {
-                e.stopPropagation(); // מונע פתיחת המודל
-                setImageToDelete(img); // רק כאן נשמר אובייקט למחיקה
+                e.stopPropagation(); 
+                setImageToDelete(img); 
               }}
             >
               🗑️
